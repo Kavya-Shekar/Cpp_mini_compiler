@@ -1,58 +1,101 @@
 %{
+    #ifndef YYSTYPE
+    #define YYSTYPE char*
+    #endif
+    
     #include<string.h>
     #include<stdio.h>
-    #ifndef YYSTYPE
-    # define YYSTYPE char*
-    #endif
     #include "y.tab.h"
-    int line = 0;
+    int line = 0;        
+    int comment = 0;
     
-    #define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
 %}
 
 alpha [A-Za-z_]
 digit [0-9]
 %option yylineno
+
 %%
-[ \t\n] {yylval = strdup(yytext);}
-":" {yylval = strdup(yytext);return T_colon;}
-"?" {yylval = strdup(yytext);return T_ques;}
-"while" {yylval = strdup(yytext);return WHILE;}
-"do" {yylval = strdup(yytext);return DO;}
-"if" {yylval = strdup(yytext);return IF;}
-"else" {yylval = strdup(yytext);return ELSE;}
-"cout" {yylval = strdup(yytext);return COUT;}
-"endl" {yylval = strdup(yytext);return ENDL;}
-"break" {yylval = strdup(yytext);return BREAK;}
-"continue" {yylval = strdup(yytext);return CONTINUE;}
-"int" {yylval = strdup(yytext);return INT;}
-"float" {yylval = strdup(yytext);return FLOAT;}
-"char" {yylval = strdup(yytext);return CHAR;}
-"void" {yylval = strdup(yytext);return VOID;}
-"#include" {yylval = strdup(yytext);return INCLUDE;}
-"return" {yylval = strdup(yytext);return RETURN;}
-"main()" {yylval = strdup(yytext);return MAINTOK;}
-{digit}+    {yylval = strdup(yytext);return NUM;}
-{digit}+.{digit}+ {yylval = strdup(yytext);return FLOAT;}
-{alpha}({alpha}|{digit})* {yylval = strdup(yytext);return ID;}
-{alpha}({alpha}|{digit})*"\.h"?  {yylval = strdup(yytext);return H;}
-\".*\" {yylval = strdup(yytext);return STRING;}
-"<" {yylval = strdup(yytext);return T_lt;}
-">"     {yylval = strdup(yytext);return T_gt;}
-"="     {yylval = strdup(yytext);return T_eq;}
-"<="    {yylval = strdup(yytext);return T_lteq;}
-">="    {yylval = strdup(yytext);return T_gteq;}
-"=="    {yylval = strdup(yytext);return T_eqeq;}
-"!="    {yylval = strdup(yytext);return T_neq;}
-"+"     {yylval = strdup(yytext);return T_pl;}
-"-"     {yylval = strdup(yytext);return T_min;}
-"*"     {yylval = strdup(yytext);return T_mul;}
-"/"     {yylval = strdup(yytext);return T_div;}
-"++"    {yylval = strdup(yytext);return T_incr;}
-"--"    {yylval = strdup(yytext);return T_decr;}
-"!"     {yylval = strdup(yytext);return T_neq;}
-"||"    {yylval = strdup(yytext);return T_or;}
-"&&"    {yylval = strdup(yytext);return T_and;}
+
+[ \t\n] {}
+
+ /* keywords */
+ /* recognize all keywords and return the correct token */
+"while" {return T_while;}
+"do" {return T_do;}
+"if" {return T_if;}
+"else" {return T_else;}
+"cout" {return T_cout;}
+"cin" {return T_cin;}
+"endl" {return T_endl;}
+"break" {return T_break;}
+"continue" {return T_continue;}
+"const" {return T_const;}
+"void" {return T_void;}
+"#include" {return T_include;}
+"return" {return T_return;}
+"main" {return T_main;}
+
+ /* class definitions */
+"class" {return T_class;}
+"private" {return T_private;}
+"public" {return T_public;}
+"protected" {return T_protected;}
+
+ /* recognize punctuation and single char operators 
+ and return the ASCII value as the token */ 
+ /* recognize two character operators and return the correct token */
+
+ /* relational operators */
+[<, >, ?, =] {return *yytext;}
+"<="    {yylval = strdup(yytext);return T_lt_eq;}
+">="    {yylval = strdup(yytext);return T_gt_eq;}
+"=="    {yylval = strdup(yytext);return T_equal;}
+"!="    {yylval = strdup(yytext);return T_not_equal;}
+
+ /* arithmetic operators */
+[+, -, *, /, %] {return *yytext;}
+"++"    {yylval = strdup(yytext);return T_increment;}
+"--"    {yylval = strdup(yytext);return T_decrement;}
+
+ /* bitwise operators */
+[^, !, |, &] {return *yytext;}
+
+ /* logical operators */
+"||"    	{return T_or;}
+"&&"    	{return T_and;}
+
+ /* data types*/
+ /* recognize int, double, bool, and string constants, return 
+ the correct token and set appropriate field of yylval */
+"int" 	{yylval = strdup(yytext);return T_int;}
+"float" {yylval = strdup(yytext);return T_float;}
+"bool" 	{yylval = strdup(yytext);return T_bool;}
+"char" 	{yylval = strdup(yytext);return T_char;}
+"String" 	{yylval = strdup(yytext);return T_string;}
+
+ /* recognize identifiers, return the correct 
+ token and set appropriate fields of yylval */
+{alpha}({alpha}|{digit})*	{
+								if(yyleng < 32 && yyleng > 0)
+								{
+									yylval = strdup(yytext);
+									return T_identifier;
+								}
+								else
+								{
+									yylval = strdup(yytext);
+									return T_error_identifier;
+								}
+							}
+			
+ /* constants  --> return values to be checked */				
+{digit}+	{return atoi(yytext);}
+{digit}+.({digit}+)?([eE][+-]?{digit}+)?	{return atoi(yytext);}
+\'.\' 	{return *yytext;}
+\".*\" 	{yylval = strdup(yytext);return *yytext;}
+
+ /* line and column number to be added */
 
 
 .    return yytext[0];
