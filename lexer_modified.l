@@ -8,7 +8,7 @@
     #include "y.tab.h"
 
     int comment = 0;
-    void TokenFIle(char*,char*);
+    void TokenFile(char*,char*);
     
 %}
 
@@ -18,13 +18,13 @@ digit [0-9]
 
 %%
 
-/*comments*/
+ /* comments */
 
 "/*"  {comment=0;}
-"*/"  {comment1;}
+"*/"  {comment=1;}
 "//".* ;
 
-/*spaces*/
+ /* whitespaces */
 
 [ \t\n] ;
 
@@ -63,7 +63,7 @@ digit [0-9]
  /* recognize two character operators and return the correct token */
 
  /* relational operators */
-[<, >, ?, =]  {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}
+[<, >, ?, =]  {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
 "<="     {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_lt_eq;}}
 ">="     {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_gt_eq;}}
 "=="     {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_equal;}}
@@ -115,7 +115,7 @@ digit [0-9]
 							}
 			
  /* constants  --> return values to commentd */				
-{digit}+	 {if(comment=1){TokenFile("Constants",atoi(yytext));yylval = strdup(yytext);return T_num;}}
+{digit}+	 {if(comment=1){TokenFile("Constants",yytext);yylval = strdup(yytext);return T_num;}}
 {digit}+.({digit}+)?([eE][+-]?{digit}+)?	 {if(comment=1){TokenFile("Constants",yytext);yylval = strdup(yytext);return T_num;}}
 \'.\' 	{return *yytext;}
 ".*" 	 {if(comment=1){TokenFile("String",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return *yytext;}}
@@ -140,3 +140,8 @@ void TokenFile(char *t,char *s)
     fprintf(fptr,"%s:%s\n",  t,s);
     fclose(fptr);
 }
+
+
+
+
+
