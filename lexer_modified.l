@@ -63,7 +63,7 @@ digit [0-9]
  /* recognize two character operators and return the correct token */
 
  /* relational operators */
-[<, >, ?, =]  {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}
+[<, >, ?, =]  {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
 "<="     {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_lt_eq;}}
 ">="     {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_gt_eq;}}
 "=="     {if(comment=1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_equal;}}
