@@ -51,40 +51,18 @@ digit [0-9]
 "main"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_main;}}
 
  /* class definitions */
-"class"  {if(comment==1){printf("Class\n");TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_class;}}
-"private"  {if(comment==1){printf("private\n");TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_private;}}
+"class"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_class;}}
+"private"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_private;}}
 "public"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_public;}}
 "protected"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_protected;}}
 "static"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_static;}}
-
- /* recognize punctuation and single char operators 
- and return the ASCII value as the token */ 
- /* recognize two character operators and return the correct token */
-
- /* relational operators */
-[<, >, ?, =]  {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
-"<="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_lt_eq;}}
-">="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_gt_eq;}}
-"=="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_equal;}}
-"!="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_not_equal;}}
-
- /* arithmetic operators */
-[+, -, *, /, %]  {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
-"++"     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_increment;}}
-"--"     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_decrement;}}
-
- /* bitwise operators */
-[^, !, |, &]  {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
-
- /* logical operators */
-"||"    	 {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return T_or;}}
-"&&"    	 {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return T_and;}}
-
+"virtual" 	{if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_virtual;}}
+"mutable" 	{if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_mutable;}}
 
  /* data types*/
  /* recognize int, double, bool, and string constants, return 
  the correct token and set appropriate field of yylval */
-"int" 	 {if(comment==1){printf("Int\n");TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_int;}}
+"int" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_int;}}
 "float"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_float;}}
 "bool" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_bool;}}
 "char" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_char;}}
@@ -116,12 +94,32 @@ digit [0-9]
 			
  /* constants  --> return values to commentd */				
 {digit}+	 {if(comment==1){TokenFile("Constants",yytext);yylval = strdup(yytext);return T_num;}}
-{digit}+.({digit}+)?([eE][+-]?{digit}+)?	 {if(comment==1){TokenFile("Constants",yytext);yylval = strdup(yytext);return T_num;}}
+{digit}+\.({digit}+)?([eE][+-]?{digit}+)?	 {if(comment==1){TokenFile("Constants",yytext);yylval = strdup(yytext);return T_num;}}
 \'.\' 	{return *yytext;}
 ".*" 	 {if(comment==1){TokenFile("String",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return *yytext;}}
 
- /* line and column number to be added */
+ /* recognize punctuation and single char operators 
+ and return the ASCII value as the token */ 
+ /* recognize two character operators and return the correct token */
 
+ /* relational operators */
+[<, >, ?, =]  {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
+"<="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_lt_eq;}}
+">="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_gt_eq;}}
+"=="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_equal;}}
+"!="     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_not_equal;}}
+
+ /* arithmetic operators */
+[+, -, *, /, %]  {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
+"++"     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_increment;}}
+"--"     {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_decrement;}}
+
+ /* bitwise operators */
+[^, !, |, &]  {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return *yytext;}}
+
+ /* logical operators */
+"||"    	 {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return T_or;}}
+"&&"    	 {if(comment==1){TokenFile("Operators",yytext);yylval = strdup(yytext);return T_and;}}
 
 .    return yytext[0];
 
@@ -130,7 +128,7 @@ digit [0-9]
 void TokenFile(char *t,char *s)
 {
     FILE *fptr;
-    fptr = fopen("tokens.txt", "a");
+    fptr = fopen("tokens.txt", "w");
     if(fptr == NULL)
     {
           printf("Error!");
