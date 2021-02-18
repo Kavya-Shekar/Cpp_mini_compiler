@@ -45,14 +45,14 @@ digit [0-9]
 "const"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_const;}}
 "void"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_void;}}
 "return"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_return;}}
-"#include"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_include;}}
+"include"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_include;}}
 "using"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_using;}}
 "namespace"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_namespace;}}
 "main"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_main;}}
 
  /* class definitions */
-"class"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_class;}}
-"private"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_private;}}
+"class"  {if(comment==1){printf("Class\n");TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_class;}}
+"private"  {if(comment==1){printf("private\n");TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_private;}}
 "public"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_public;}}
 "protected"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_protected;}}
 "static"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_static;}}
@@ -84,7 +84,7 @@ digit [0-9]
  /* data types*/
  /* recognize int, double, bool, and string constants, return 
  the correct token and set appropriate field of yylval */
-"int" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_int;}}
+"int" 	 {if(comment==1){printf("Int\n");TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_int;}}
 "float"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_float;}}
 "bool" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_bool;}}
 "char" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_char;}}
