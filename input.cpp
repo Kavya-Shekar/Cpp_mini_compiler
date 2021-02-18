@@ -1,19 +1,4 @@
-#include <iostream.h>
-#include <x>
-#include <iostream.h>
-#include "iostream.h"
-using namespace ello;
-#include "iostream.h"
-#include <iostream>
-#include "iostream"
-#include <iostream>
-using namespace std;
-#include "iostreamx"
-#include "iostream.h"
-#include <iostream>
-#include <_ghjy>
-#include "iostream"
-#include "iostream.h"
+
 using namespace std;
 using namespace std;
 using namespace std;
@@ -34,7 +19,7 @@ class ABC{
 		static void* t;
 		static const int g = 9;
 		float Gth();
-		int print(int* y=9)
+		int print(int y=9)
 		{
 			int h = 9;
 		}
@@ -64,22 +49,55 @@ char* fg::ABD()
 	int a = 9;
 }
 
-/*
+
 int main() {    
     float n1, n2, n3;
 
-    cout << "Enter three numbers: ";
-    cin >> n1 >> n2 >> n3;
-
-    if(n1 >= n2 && n1 >= n3)
-        cout << "Largest number: " << n1;
-
-    if(n2 >= n1 && n2 >= n3)
-        cout << "Largest number: " << n2;
-    
-    if(n3 >= n1 && n3 >= n2)
-        cout << "Largest number: " << n3;
+        
+        int a,b,c;
+        int c=10;
+        int a,b,c=10;
+        int a;
+        c=10;
+        static int x=10;
+        static int a;
+        const int a=10;
+        const int a,b;
+        if(a>b)
+        {
+        	c=c+10;
+        }
+        else if (c>=d)
+        {
+        	c=c*10;
+        }
+        else if(~a)
+        {
+        	d=d-10;
+        }
+        else if((a>0)&&(b<0))
+        {
+        	c=c;
+        }
+        else
+        {
+        	c=c/10;
+        }
+        do
+        {
+        	a=a+10;
+        	a++;
+        	++a;
+        	--a;
+        } while(a>10);
+        cin >> a;
+        cin >> "hekko worlg" >> endl;
+        cin >> endl;
+        cout << "hello world" <<x << endl;
+        cout << "hello world" <<x <<y;
+        cout << "hello world";
+        cout << endl << endl;
+        return 0;
   
-    return 0;
-}*/
+}
 

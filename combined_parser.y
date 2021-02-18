@@ -53,9 +53,9 @@ X
 	: Class X
 	| Function X 
 	| Function_decl X
-	| Function_call X
 	| MAIN
 	;
+	
 HEADERFILE
 	: '\"' T_header '\"'
 	| '<' T_header '>'
@@ -100,8 +100,8 @@ Access_specifier
 Class_members	: TYPE T_identifier ';' Class_members
 		| T_static TYPE T_identifier ';' Class_members
 		| T_mutable TYPE T_identifier ';' Class_members
-		| T_const DECLR ';' Class_members 
-		| T_static T_const DECLR ';' Class_members 
+		| T_const Must_declare ';' Class_members 
+		| T_static T_const Must_declare ';' Class_members 
 		| Function_decl Class_members
 		| Function Class_members
 		| T_static Function_decl Class_members
@@ -115,7 +115,8 @@ Class_members	: TYPE T_identifier ';' Class_members
 		| 
 		;
 				
-
+Must_declare: TYPE T_identifier '=' LIT
+			;
 
 Function_decl	: TYPE T_identifier '(' Parameter ')' ';'
 				| TYPE T_identifier '(' ')' ';'
@@ -139,19 +140,7 @@ Var_initialize	: T_int T_identifier '=' T_num
 Func_body
 	: DECLR ';'
 	;
-			
-Function_call	: Func_name '(' Arguments')' ';'
-				| Func_name '(' ')' ';'
-				;
-
-Func_name	: T_identifier
-			| T_identifier '.' T_identifier
-			;
-
-Arguments	: T_identifier Arguments
-			| ',' Arguments
-			| T_identifier
-			;
+	
 MAIN
 	: T_int T_main '('')' BODY
 	| T_void T_main '('')' BODY
@@ -188,8 +177,6 @@ IF_L
 	| T_else '{' C '}' IF_L
 	|
 	;
-
-
 
 COND
       : LIT RELOP COND
@@ -255,8 +242,6 @@ X
 	
 ASSIGN
 	: T_identifier '=' EXP 
-	| T_identifier '=' Func_name '(' Arguments')' 
-	| T_identifier '=' Func_name '(' ')' 
 	;
 
 STATEMENTS
@@ -275,17 +260,29 @@ TERM
 	: FACTOR
 	| TERM '*' FACTOR
 	| TERM '/' FACTOR
+	| TERM '%' FACTOR
 	;
 FACTOR
-      : LIT 
-      | '(' EXP ')' 
-      ;
-
+	: LIT 
+	| '(' EXP ')' 
+	;
 LIT
-      : T_identifier 
-      | T_num
-      ;
+	: T_identifier Function_call
+	| T_num
+	;
 	
+Function_call	: '(' Arguments')' 
+				| '.' T_identifier '(' Arguments')' 
+				|  '(' ')' 
+				| '.' T_identifier '(' ')' 
+				|
+				;
+
+Arguments	: LIT Arguments
+			| ',' Arguments
+			| LIT
+			;
+
 PRINT
       : T_cout  OUT 
       | T_cin IN
@@ -298,6 +295,7 @@ OUT
       : '<''<' T_PRINT OUT
       |
       ;
+      
 T_PRINT
 	: T_STRING
 	| LIT

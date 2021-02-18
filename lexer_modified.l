@@ -29,7 +29,6 @@ digit [0-9]
 [ \t\n] ;
 
 
-
  /* keywords */
  /* recognize all keywords and return the correct token */
 
@@ -37,6 +36,7 @@ digit [0-9]
 "do"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_do;}}
 "if"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_if;}}
 "else"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_else;}}
+"else if"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_elseif;}}
 "cout"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_cout;}}
 "cin"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_cin;}}
 "endl"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_endl;}}
@@ -67,13 +67,14 @@ digit [0-9]
 "float"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_float;}}
 "bool" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_bool;}}
 "char" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_char;}}
-"string"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_string;}}
+"string"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_s;}}
 "long"    {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_long;}}
 "double"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_double;}}
 "short"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_short;}}
  /* recognize identifiers, return the correct 
  token and set appropriate fields of yylval */
 {alpha}({alpha}|{digit})*	{
+								//printf("Identifier: %s\n", yytext);
 								if(yyleng < 32 && yyleng > 0)
 								{
 									yylval = strdup(yytext);
@@ -97,7 +98,7 @@ digit [0-9]
 {digit}+	 {if(comment==1){TokenFile("Constants",yytext);yylval = strdup(yytext);return T_num;}}
 {digit}+\.({digit}+)?([eE][+-]?{digit}+)?	 {if(comment==1){TokenFile("Constants",yytext);yylval = strdup(yytext);return T_num;}}
 \'.\' 	{return *yytext;}
-".*" 	 {if(comment==1){TokenFile("String",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return *yytext;}}
+\".*\" 	 {if(comment==1){TokenFile("String",yytext);yylval = strdup(yytext);yylval = strdup(yytext);return T_STRING;}}
 
  /* recognize punctuation and single char operators 
  and return the ASCII value as the token */ 
@@ -129,7 +130,7 @@ digit [0-9]
 void TokenFile(char *t,char *s)
 {
     FILE *fptr;
-    fptr = fopen("tokens.txt", "w");
+    fptr = fopen("tokens.txt", "a");
     if(fptr == NULL)
     {
           printf("Error!");
