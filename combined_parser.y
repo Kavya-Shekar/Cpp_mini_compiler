@@ -57,9 +57,8 @@ X
 	;
 	
 HEADERFILE
-	: '\"' T_header '\"'
+	: T_STRING
 	| '<' T_header '>'
-	| '\"' T_identifier '\"'
 	| '<' T_identifier '>'
 	;
 
@@ -100,41 +99,69 @@ Access_specifier
 Class_members	: TYPE T_identifier ';' Class_members
 		| T_static TYPE T_identifier ';' Class_members
 		| T_mutable TYPE T_identifier ';' Class_members
-		| T_const Must_declare ';' Class_members 
-		| T_static T_const Must_declare ';' Class_members 
+		| T_const Var_initialize ';' Class_members 
+		| T_static T_const Var_initialize ';' Class_members 
+		
 		| Function_decl Class_members
-		| Function Class_members
+		| Class_Function Class_members
+		
 		| T_static Function_decl Class_members
-		| T_static Function Class_members
+		| T_static Class_Function Class_members
+		
 		| T_virtual Function_decl Class_members
-		| T_virtual Function Class_members
+		| T_virtual Class_Function Class_members
+		
 		| T_friend T_class T_identifier ';' Class_members
 		| T_friend TYPE T_identifier '(' ')' ';' Class_members
 		| T_friend TYPE T_identifier ':' ':' T_identifier '(' ')' ';' Class_members
-		| T_friend Function Class_members
+		| T_friend Class_Function Class_members
+		
+		| Constr_Destr		
 		| 
 		;
-				
-Must_declare: TYPE T_identifier '=' LIT
+
+Constr_Destr: '~' T_identifier '(' Parameter ')' ';'
+			| '~' T_identifier '(' ')' ';'
+			| '~' T_identifier '(' Parameter ')' '{' Func_body '}'
+			| '~' T_identifier '(' ')' '{' Func_body '}'
+			| T_identifier '(' Parameter ')' ';'
+			| T_identifier '(' ')' ';'
+			| T_identifier '(' Parameter ')' '{' Func_body '}'
+			| T_identifier '(' ')' '{' Func_body '}'
 			;
 
 Function_decl	: TYPE T_identifier '(' Parameter ')' ';'
 				| TYPE T_identifier '(' ')' ';'
 				;
 				
-Function	: TYPE T_identifier '(' Parameter ')' '{' Func_body '}'
+Class_Function	: TYPE T_identifier '(' Parameter ')' '{' Func_body '}'
 			| TYPE T_identifier '(' ')' '{' Func_body '}'
 			| TYPE T_identifier ':' ':' T_identifier '(' Parameter ')' '{' Func_body '}'			
 			| TYPE T_identifier ':' ':' T_identifier '(' ')' '{' Func_body '}'
 			;
 			
+Function	: TYPE T_identifier '(' Parameter ')' '{' Func_body '}'
+			| TYPE T_identifier '(' ')' '{' Func_body '}'
+			| TYPE T_identifier ':' ':' T_identifier '(' Parameter ')' '{' Func_body '}'			
+			| TYPE T_identifier ':' ':' T_identifier '(' ')' '{' Func_body '}'
+			| T_identifier ':' ':' T_identifier '(' Parameter ')' '{' Func_body '}'			
+			| T_identifier ':' ':' T_identifier '(' ')' '{' Func_body '}'
+			| '~' T_identifier ':' ':' T_identifier '(' Parameter ')' '{' Func_body '}'			
+			| '~' T_identifier ':' ':' T_identifier '(' ')' '{' Func_body '}'
+			;
+			
+			
 Parameter	: TYPE T_identifier Parameter
 		| TYPE T_identifier ',' Parameter
 		| TYPE T_identifier 
-		| TYPE T_identifier '=' T_num Var_initialize /*have to add other initializations too */
+		| TYPE T_identifier '=' LIT Default_parameters 
 		;
+
+Default_parameters	: ',' Var_initialize Default_parameters
+					| /*lambda */
+					;
 		
-Var_initialize	: T_int T_identifier '=' T_num
+Var_initialize	: TYPE T_identifier '=' LIT
 				| /*lambda */
 				;	
 Func_body
@@ -155,6 +182,7 @@ C
 	: DECLR ';' C 
 	| STATEMENTS ';' C
 	| LOOP C
+	| T_identifier Function_call ';' C
 	|
 	;
 
@@ -220,6 +248,10 @@ TYPE
 	| T_float '*' 
 	| T_char '*' 
 	| T_void '*'
+	| T_int '&' 
+	| T_float '&' 
+	| T_char '&' 
+	| T_void '&'
 	;
 	
 
