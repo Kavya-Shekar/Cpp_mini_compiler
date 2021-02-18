@@ -43,7 +43,6 @@ digit [0-9]
 "break"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_break;}}
 "continue"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_continue;}}
 "const"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_const;}}
-"void"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_void;}}
 "return"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_return;}}
 "include"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_include;}}
 "using"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_using;}}
@@ -58,10 +57,12 @@ digit [0-9]
 "static"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_static;}}
 "virtual" 	{if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_virtual;}}
 "mutable" 	{if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_mutable;}}
+"friend" 	{if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_friend;}}
 
  /* data types*/
  /* recognize int, double, bool, and string constants, return 
  the correct token and set appropriate field of yylval */
+"void"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_void;}}
 "int" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_int;}}
 "float"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_float;}}
 "bool" 	 {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_bool;}}

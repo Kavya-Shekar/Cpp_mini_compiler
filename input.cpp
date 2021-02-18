@@ -26,21 +26,43 @@ class ABC{
 		{
 			int h = 9;
 		}
+		static int print(int a, int y);
 	private: 
 		int xgy;
 		const int j = 5;
 		static float* t;
+		static void* t;
 		static const int g = 9;
 		float Gth();
-		int print()
+		int print(int* y=9)
+		{
+			int h = 9;
+		}
+		int printfg(char* t, int* y=9)
 		{
 			int h = 9;
 		}
 }xyz, jh, lhkg;
 
 class VGFB : public ACS, virtual private HYT{
+	private:
+		friend class abc;
+		friend char* a();
+		friend float HG::ABD();
+		friend int ABD();
+		friend int ABD();
+		friend int HG::ABD();
 };
 
+char* ABD()
+{
+	int a = 9;
+}
+
+char* fg::ABD()
+{
+	int a = 9;
+}
 
 /*
 int main() {    
