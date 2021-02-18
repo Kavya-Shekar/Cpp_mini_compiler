@@ -46,7 +46,8 @@ digit [0-9]
 "void"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_void;}}
 "return"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_return;}}
 "#include"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_include;}}
-"using namespace "{alpha}({alpha}|{digit})*";"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_namespace;}}
+"using"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_using;}}
+"namespace"   {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext); return T_namespace;}}
 "main"  {if(comment==1){TokenFile("Keyword",yytext);yylval = strdup(yytext);return T_main;}}
 
  /* class definitions */
