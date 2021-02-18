@@ -17,6 +17,7 @@ digit [0-9]
 
 %%
 
+ /* skip over white space */
 [ \t\n] {}
 
  /* keywords */
@@ -48,15 +49,15 @@ digit [0-9]
 
  /* relational operators */
 [<, >, ?, =] {return *yytext;}
-"<="    {yylval = strdup(yytext);return T_lt_eq;}
-">="    {yylval = strdup(yytext);return T_gt_eq;}
-"=="    {yylval = strdup(yytext);return T_equal;}
-"!="    {yylval = strdup(yytext);return T_not_equal;}
+"<="    {return T_lt_eq;}
+">="    {return T_gt_eq;}
+"=="    {return T_equal;}
+"!="    {return T_not_equal;}
 
  /* arithmetic operators */
 [+, -, *, /, %] {return *yytext;}
-"++"    {yylval = strdup(yytext);return T_increment;}
-"--"    {yylval = strdup(yytext);return T_decrement;}
+"++"    {return T_increment;}
+"--"    {return T_decrement;}
 
  /* bitwise operators */
 [^, !, |, &] {return *yytext;}
@@ -77,6 +78,7 @@ digit [0-9]
  /* recognize identifiers, return the correct 
  token and set appropriate fields of yylval */
 {alpha}({alpha}|{digit})*	{
+								//printf("T_identifer: %d\n", yylineno);
 								if(yyleng < 32 && yyleng > 0)
 								{
 									yylval = strdup(yytext);
@@ -88,16 +90,16 @@ digit [0-9]
 									return T_error_identifier;
 								}
 							}
+{alpha}({alpha}|{digit})*"\.h"	{return T_header;}
+"using namespace "{alpha}({alpha}|{digit})*";"	{return T_namespace;}
 			
  /* constants  --> return values to be checked */				
 {digit}+	{return atoi(yytext);}
 {digit}+.({digit}+)?([eE][+-]?{digit}+)?	{return atoi(yytext);}
-\'.\' 	{return *yytext;}
-\".*\" 	{yylval = strdup(yytext);return *yytext;}
 
  /* line and column number to be added */
 
 
-.    return yytext[0];
+.    {printf("%c\n", *yytext); return yytext[0];}
 
 %%
