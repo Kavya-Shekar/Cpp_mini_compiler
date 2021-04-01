@@ -1,5 +1,9 @@
-rm tokens.txt
-yacc -d combined_parser.y
-lex lexer_modified.l
+rm -f a.out
+rm -f tokens.txt
+rm -f symbol.txt
+
+yacc -d parser.y
+lex lexer.l
 gcc y.tab.c lex.yy.c -ll
-./a.out < input.cpp
+
+./a.out Input_files/input_1.cpp
