@@ -15,11 +15,12 @@ class A
 int main()
 {
         cout << endl << endl;
-        int a;
+        int a, b;
         int g;
         int c = 7;
         int d;
         int y;
+        m = 90;
 	int b = 1*9/7/6%3; 
 	
 	cout << "j";

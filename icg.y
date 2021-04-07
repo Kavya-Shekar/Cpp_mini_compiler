@@ -53,6 +53,9 @@
 	void insert_goto_label(int step);
 	void remove_labels(int step);
 	
+	void reset_error();
+	void set_error();
+	
 	void add_parameters(char *token, void *param);
 	int top_i =-1;
 	
@@ -325,39 +328,19 @@ DECLR
 LISTVAR
 	: T_identifier { lookup($1,yylineno,'I',NULL); }
 	| T_identifier ',' LISTVAR { lookup($1,yylineno,'I',NULL); }
-	| T_identifier '=' { push_stack($1);  push_stack(yytext); } EXP 
-			{ 	
-				if(lookup($1,yylineno,'I',NULL))
-				{ 
-					codegen_assign();
-				} 
-				else
-				{
-					pop_stack();
-				}
-			} LISTVAR
+	| T_identifier '=' { if(!lookup($1,yylineno,'I',NULL)){set_error();} push_stack($1);  push_stack(yytext); } EXP { codegen_assign(); reset_error();} LISTVAR
 	| /* lambda */
 	;
 
 ASSIGN
-	: T_identifier { push_stack($1); } '=' { push_stack(yytext);} EXP 
-			{ 
-				if(search_id($1,yylineno)) 
-				{
-					codegen_assign(); 
-				}
-				else
-				{
-					pop_stack();
-				}
-			}
+	: T_identifier { search_id($1,yylineno); push_stack($1); } '=' { push_stack(yytext);} EXP { codegen_assign(); reset_error();}
 	;
 
 STATEMENTS
 	: T_return EXP
 	| UX
 	| PRINT 
-	| T_identifier Function_call { search_func($1,yylineno); }
+	| T_identifier Function_call {reset_error(); search_func($1,yylineno); reset_error(); }
 	| /* lambda */
 	;	
 
@@ -429,6 +412,8 @@ int dl = 0;
 int if_label = 0;
 char *if_lb[100];
 int il = 0;
+
+int erred = 0;
 
 int main(int argc,char *argv[])
 {
@@ -506,6 +491,15 @@ void add_parameters(char *token, void *param)
 {
 }
 
+void reset_error()
+{
+	erred = 0;
+}
+void set_error()
+{
+	erred = 1;
+}
+
 void add_temp_variables(char* token, int line)
 {	
 	strcpy(st[struct_index].name, token);
@@ -516,8 +510,7 @@ void add_temp_variables(char* token, int line)
 	st[struct_index].scope = scope_val;
 		
 	st[struct_index].line = line;
-	struct_index++; 
-	
+	struct_index++; 	
 }
 
 int lookup(char *token, int line, char type, char *value)
@@ -568,13 +561,19 @@ int search_id(char *token,int lineno)
 			return 1;
 		}
 	}
+	printf(ANSI_COLOR_RED "ERROR at line %d: Variable - \'%s\' is not declared\n\n" ANSI_COLOR_RESET, lineno, token);
+	erred = 1;
 	return 0;
 }
 
 void search_func(char* token, int lineno)
 {
 	int index = search_id(token, lineno);
-	if(index == -1) printf(ANSI_COLOR_RED "ERROR at line %d: Function - \'%s\' is not declared\n\n" ANSI_COLOR_RESET, lineno, token);
+	if(index == -1)
+	{
+		printf(ANSI_COLOR_RED "ERROR at line %d: Function - \'%s\' is not declared\n\n" ANSI_COLOR_RESET, lineno, token);
+		erred = 1;
+	}
 }
 
 void increment_scope()
@@ -641,17 +640,21 @@ void update_quadraple(char* op, char* arg1, char* arg2, char* res)
 
 void push_stack(char* token)
 {
+	if(erred) return;
 	//printf("\t\tPushing - %s\n",token);
 	strcpy(sti[++top_i],token);	
 }
 
 void pop_stack()
 {
+	if(erred) return;
     --top_i;
 }
 
 void codegen()
 {
+	if(erred) return;
+	
 	/* Temporary variable */
     char temp[2] = "T";
     char tmp_no[4];
@@ -673,6 +676,8 @@ void codegen()
 
 void codegen_assign()
 {
+	if(erred) return;
+	
 	/* Generating ICG for the expression */
     printf("%s = %s\n", sti[top_i-2],sti[top_i]);
     
@@ -685,6 +690,8 @@ void codegen_assign()
 
 void push_do_label()
 {
+	if(erred) return;
+	
 	/* Pushing new label to label stack*/
     char label[2] = "L";
     char label_no[4];
@@ -703,6 +710,8 @@ void push_do_label()
 
 void check_do_loop()
 {
+	if(erred) return;
+	
 	/* Generating temperary variables for condition */	
 	codegen();
 	
@@ -715,6 +724,7 @@ void check_do_loop()
 
 char* push_if_label()
 {
+	
 	/* Pushing new label to label stack*/
     char label[2] = "L";
     char label_no[4];
@@ -729,6 +739,8 @@ char* push_if_label()
 
 void check_if_loop()
 {
+	if(erred) return;
+	
 	/* Generating temperary variables for condition */	
 	codegen();
 	
@@ -736,6 +748,7 @@ void check_if_loop()
 	--il;
 	char* false_label = push_if_label();
 	char* fall_through = push_if_label();
+	
 	/* Generating ICG for the expression */
     printf("if %s goto %s\n", sti[top_i], true_label);
 	update_quadraple("if", sti[top_i], NULL, true_label);
@@ -750,6 +763,8 @@ void check_if_loop()
 
 void print_label(int step)
 {
+	if(erred) return;
+	
 	char* label = if_lb[il + step];
 	printf("%s :\n", label);
 	update_quadraple(NULL, NULL, NULL, label);
@@ -757,11 +772,15 @@ void print_label(int step)
 
 void remove_labels(int step)
 {
+	if(erred) return;
+	
 	il = il+step - 1;
 }
 
 void insert_goto_label(int step)
 {
+	if(erred) return;
+	
 	char* label = if_lb[il - step];
 	printf("goto %s\n", label);
 	update_quadraple("goto", NULL, NULL, label);	
@@ -769,6 +788,8 @@ void insert_goto_label(int step)
 
 void check_ifelse_loop()
 {	
+	if(erred) return;
+	
 	char* fall_through = if_lb[il];
 	il -= 2;
 	
@@ -779,11 +800,6 @@ void check_ifelse_loop()
 	strcpy(if_lb[++il], fall_through);	
 	fall_through = if_lb[il];
 	
-	/* Generating ICG for the expression
-	printf("%s :\n", false_label);
-	update_quadraple(NULL, NULL, NULL, false_label); */
-	
-	/* Generating temperary variables for condition */	
 	codegen();
 	
     printf("if %s goto %s\n", sti[top_i], true_label);

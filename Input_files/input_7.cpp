@@ -2,7 +2,7 @@
 
 int main()
 {
-	int z = 10;
+	int zabvhgyjuyhtgfhrycnxbdhfjgurkezopel = 10;
 	if(z>90)
 	{
         cout << endl << endl;
