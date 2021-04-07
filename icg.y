@@ -5,27 +5,43 @@
 	#ifndef YYSTYPE
 	#define YYSTYPE char*
 	#endif
+	
+	
+	#define ANSI_COLOR_RED     "\x1b[31m"
+	#define ANSI_COLOR_GREEN   "\x1b[32m"
+	#define ANSI_COLOR_YELLOW  "\x1b[33m"
+	#define ANSI_COLOR_BLUE    "\x1b[34m"
+	#define ANSI_COLOR_MAGENTA "\x1b[35m"
+	#define ANSI_COLOR_CYAN    "\x1b[36m"
+	#define ANSI_COLOR_RESET   "\x1b[0m"
  
 	int yylex();
 	void yyerror(char *);
 	void yyerrok(char *);
-	void lookup(char *,int,char,char*,char*);
+	
+	int lookup(char *,int,char,char*);
 	void update_datatype(char* , int);
-	void update(char *,int,char *);
+	
 	int search_id(char *,int );
 	void search_func(char* token, int lineno);
+	
 	extern FILE *yyin;
 	extern int yylineno;
 	extern char *yytext;
-	void push_i();
+	
+	void push_stack(char* token);
+	void pop_stack();
 	void codegen(void);
 	void codegen_assign(void);
+	
 	void increment_scope();
 	void decrement_scope();
-	void push(int scope);	 
-	void pop();
+	void push_scope(int scope);	 
+	void pop_scope();
 	int search_scope(int value);
-	int search_in_scope(char *token,int lineno);
+	int search_in_scope(char *token);
+	
+	void add_parameters(char *token, void *param);
 	int top_i =-1;
 	
 	typedef struct quadruples
@@ -43,11 +59,11 @@
 		int line;
 		char name[31];
 		char type;
-		char *value;
+		void *value;
 		char datatype[20];
 		int scope ;
 	}ST;
-	int struct_index = 0;
+		int struct_index = 0;
 	ST st[10000];
 	
 	int scope_val = 0;
@@ -88,12 +104,11 @@ HEADERFILE
 	: T_STRING
 	| '<' T_header '>'
 	| '<' T_identifier '>'
-	| '<' error '>' { yyerrok; yyclearin; printf("Invalid header file\n\n"); }
+	| '<' error '>' { yyerrok; yyclearin; printf(ANSI_COLOR_RED "Invalid header file\n\n" ANSI_COLOR_RESET ); }
 	;
 
 Class	
 	: T_class T_identifier Base_class '{' Class_body '}' Var_list ';'
-	| T_class error { yyerrok; yyclearin; printf("Invalid class name\n\n"); } Base_class '{' Class_body '}' Var_list ';'
 	;
 
 Var_list	: T_identifier ',' Var_list
@@ -124,9 +139,11 @@ Class_body
 Access_specifier	
 	: T_public 
 	| T_private 
-	| T_protected ;
+	| T_protected 
+	;
 			
-Class_members	: TYPE T_identifier ';' Class_members
+Class_members	
+		: TYPE T_identifier ';' Class_members
 		| T_static TYPE T_identifier ';' Class_members
 		| T_mutable TYPE T_identifier ';' Class_members
 		| T_const Var_initialize ';' Class_members 
@@ -160,29 +177,27 @@ Constr_Destr: '~' T_identifier '(' Parameter ')' ';'
 			| T_identifier '(' ')' '{' Func_body '}'
 			;
 
-Function_decl	: TYPE T_identifier '(' Parameter ')' ';'
-				| TYPE T_identifier '(' ')' ';'
+Function_decl	: TYPE T_identifier '(' Parameter ')' ';' { lookup($2,yylineno,'f',NULL); } 
+				| TYPE T_identifier '(' ')' ';' { lookup($2,yylineno,'f',NULL); } 
 				;
 				
 Class_Function	: TYPE T_identifier '(' Parameter ')' '{' Func_body '}'
 			| TYPE T_identifier '(' ')' '{' Func_body '}'
 			| TYPE T_identifier ':' ':' T_identifier '(' Parameter ')' '{' Func_body '}'			
 			| TYPE T_identifier ':' ':' T_identifier '(' ')' '{' Func_body '}'
-			;
-			
+			;			
 
 Function
 	: TYPE Declrfun
 	| '~' Declrfun
-	| TYPE T_identifier '(' Parameter ')' '{' Func_body '}' {lookup($2,yylineno,'F',NULL,NULL);}
-	| TYPE T_identifier '(' ')' '{' Func_body '}' {lookup($2,yylineno,'F',NULL,NULL);}
+	| TYPE T_identifier '(' Parameter ')' '{' Func_body '}' { lookup($2,yylineno,'F',NULL); }
+	| TYPE T_identifier '(' ')' '{' Func_body '}' { lookup($2,yylineno,'F',NULL); }
 	;
 
 Declrfun
-	: T_identifier ':' ':' T_identifier '(' Parameter ')' '{' Func_body '}'	{lookup($1,yylineno,'F',NULL,NULL);}		
-	| T_identifier ':' ':' T_identifier '(' ')' '{' Func_body '}' {lookup($1,yylineno,'F',NULL,NULL);}	
-	;	
-			
+	: T_identifier ':' ':' T_identifier '(' Parameter ')' '{' Func_body '}'	{ lookup($1,yylineno,'F',NULL); }		
+	| T_identifier ':' ':' T_identifier '(' ')' '{' Func_body '}' { lookup($1,yylineno,'F',NULL); }	
+	;				
 			
 Parameter	: TYPE T_identifier Parameter
 		| TYPE T_identifier ',' Parameter
@@ -196,7 +211,8 @@ Default_parameters	: ',' Var_initialize Default_parameters
 		
 Var_initialize	: TYPE T_identifier '=' LIT
 				| /*lambda */
-				;	
+				;
+					
 Func_body
 	: C
 	;
@@ -204,7 +220,6 @@ Func_body
 MAIN
 	: T_int T_main '('')' BODY
 	| T_void T_main '('')' BODY
-	| error { yyerrok; yyclearin; printf("Wrong main() data type\n\n"); } T_main '('')' BODY
 	;
 
 BODY
@@ -218,7 +233,7 @@ C
 	| LOOP C
 	| ASSIGN ';' C 
 	| BODY
-	| error ';' { yyerrok; yyclearin; printf("Invalid Statement\n\n"); } C
+	| error ';' { yyerrok; yyclearin; printf(ANSI_COLOR_RED "Invalid Statement\n\n" ANSI_COLOR_RESET); } C
 	;
 
 LOOP
@@ -248,6 +263,7 @@ COND
       | LOGIC_OP COND
       | /* lambda */
       ;
+      
 RELOP
       : '>'
       | '<' 
@@ -269,7 +285,6 @@ NEG
       : '~'
       ;
 
-
 TYPE
 	: T_void		{update_datatype($1, yylineno);}
 	| T_int			{update_datatype($1, yylineno);}
@@ -290,56 +305,75 @@ TYPE
 	| T_void '&'		{update_datatype($1, yylineno);}
 	;
 	
-
 DECLR
 	: TYPE LISTVAR
 	| T_static TYPE LISTVAR
 	| T_const TYPE LISTVAR
-	/*| TYPE T_num error ';'	{ yyerrok; yyclearin; printf("Declaration error\n"); }*/
 	;
-//LIT {push();} T_eq {push();} EXP {codegen_assign();}
+	
 LISTVAR
-	: T_identifier  LISTVAR      {lookup($1,yylineno,'I',NULL,NULL);}
-	| LIT '=' EXP  LISTVAR {lookup($1,yylineno,'I',NULL,NULL);update($1,yylineno,$3);}
-	| ',' LISTVAR
-	/*| error	';'	{ yyerrok; yyclearin; printf("Variable list error\n"); }*/
-	|
+	: T_identifier { lookup($1,yylineno,'I',NULL); }
+	| T_identifier ',' LISTVAR { lookup($1,yylineno,'I',NULL); }
+	| T_identifier '=' { push_stack($1);  push_stack(yytext); } EXP 
+			{ 	
+				if(lookup($1,yylineno,'I',NULL))
+				{ 
+					codegen_assign();
+				} 
+				else
+				{
+					pop_stack();
+				}
+			} LISTVAR
+	| /* lambda */
 	;
 
 ASSIGN
-	: T_identifier {printf("--%s\n",yytext);push_i();} '=' {printf("--%s\n",yytext);push_i();} EXP   {codegen_assign();;update($1,yylineno,$5);}
+	: T_identifier { push_stack($1); } '=' { push_stack(yytext);} EXP 
+			{ 
+				if(search_id($1,yylineno)) 
+				{
+					codegen_assign(); 
+				}
+				else
+				{
+					pop_stack();
+				}
+			}
 	;
 
 STATEMENTS
 	: T_return EXP
 	| UX
 	| PRINT 
-	| T_identifier Function_call {search_func($1,yylineno);}
+	| T_identifier Function_call { search_func($1,yylineno); }
 	| /* lambda */
 	;	
 
 EXP
-	: TERM 
-	| EXP '+' {push_i();} TERM {codegen();}
-	| EXP '-' {push_i();} TERM {codegen();}
+	: TERM
+	| EXP '+' { push_stack("+"); } TERM { codegen(); }
+	| EXP '-' { push_stack("-"); } TERM { codegen(); }
 	;
+	
 TERM
 	: FACTOR
-	| TERM '*' {push_i();} FACTOR {codegen();}
-	| TERM '/' {push_i();} FACTOR {codegen();}
-	| TERM '%' {push_i();} FACTOR {codegen();}
+	| TERM '*' { push_stack("*"); } FACTOR {codegen();}
+	| TERM '/' { push_stack("/"); } FACTOR {codegen();}
+	| TERM '%' { push_stack("%"); } FACTOR {codegen();}
 	;
+	
 FACTOR
 	: LIT 
 	| '(' EXP ')' 
 	;
-LIT
-	: T_identifier {push_i();}
-	| T_num {push_i();}
-	;
-
 	
-Function_call	: '(' Arguments')' 
+LIT
+	: T_identifier { push_stack(yytext);}
+	| T_num { push_stack(yytext);}
+	;
+	
+Function_call	: '(' Arguments ')' 
 				| '.' T_identifier '(' Arguments')' 
 				|  '(' ')' 
 				| '.' T_identifier '(' ')' 
@@ -354,10 +388,12 @@ PRINT
       : T_cout  OUT 
       | T_cin IN
       ;
+      
 IN
       : '>''>' T_PRINT IN
       | /* lambda */
       ;
+      
 OUT
       : '<''<' T_PRINT OUT
       | /* lambda */
@@ -374,15 +410,7 @@ T_PRINT
 char datatype[20];
 int line_number = 0;
 char sti[100][100];
-char i_[2]="0";
-int temp_i=0;
-char tmp_i[3];
-char temp[2]="t";
-int label[20];
-int lnum=0;
-int ltop=0;
-int abcd=0;
-int flag_set = 1;
+int temp_i = 0;
 
 int main(int argc,char *argv[])
 {
@@ -407,30 +435,38 @@ int main(int argc,char *argv[])
 		else
 		{
 			fprintf(fptr,"Number of entries in the symbol table = %d\n\n",struct_index);
-			fprintf(fptr,"-----------------------------------Symbol Table-----------------------------------------------\n\n");
+			fprintf(fptr,"----------------------------------- Symbol Table -----------------------------------------------\n\n");
 			fprintf(fptr,"S.No\t  Token  \t Line Number \t Category \t DataType \t Value \t\t\t Scope \n");
 			for(int i = 0;i < struct_index;i++)
 			{
 				char *ty;
+				
+				if(st[i].type == 'f')
+					ty = "func_decl";
 
-
-				if(st[i].type=='F')
-				{
-					ty="func_call";
-					fprintf(fptr,"%-4d\t  %-7s\t   %-10d \t %-9s\t  %-7s\t   %-5s\t\t  %-4d\n",i+1,st[i].name,st[i].line,ty,st[i].datatype,st[i].value,st[i].scope);
-				}
-				ty= "identifier";
-				fprintf(fptr,"%-4d\t  %-7s\t   %-10d \t %-9s\t  %-7s\t   %-5s\t\t  %-4d\n",i+1,st[i].name,st[i].line,ty,st[i].datatype,st[i].value,st[i].scope);
+				else if(st[i].type=='F')
+					ty = "func_call";
+					
+				else if(st[i].type=='I')
+					ty = "identifier";
+				
+								
+				fprintf(fptr,"%-4d\t  %-7s\t   %-10d \t %-9s\t  %-7s\t   %-5s\t\t  %-4d\n", \
+							i+1, st[i].name, st[i].line, ty, st[i].datatype, (char*)st[i].value, st[i].scope);
 			}
-			 fprintf(fptr,"---------------------Quadruples-------------------------\n\n");
-		    	 fprintf(fptr,"Operator \t Arg1 \t\t Arg2 \t\t Result \n");
-		    	 int i;
-		    	 for(i=0;i<quadlen;i++)
-		    	 {
-				fprintf(fptr,"%-8s \t %-8s \t %-8s \t %-6s \n",q[i].op,q[i].arg1,q[i].arg2,q[i].res);
-		    	 }
+			
+			fprintf(fptr,"\n\n---------------------Quadruples-------------------------\n\n");
+			fprintf(fptr,"Operator \t Arg1 \t\t Arg2 \t\t Result \n");
+			for(int i = 0; i<quadlen; i++)
+			{
+				fprintf(fptr,"%-8s \t %-8s \t %-8s \t %-6s \n", q[i].op, q[i].arg1, q[i].arg2, q[i].res);
+			}
 		}
 		fclose(fptr);
+	}
+	else
+	{
+		printf("Parsing failed\n");
 	}
 	
 	fclose(yyin);
@@ -439,7 +475,8 @@ int main(int argc,char *argv[])
 
 void yyerror(char *s)
 {
-  	printf("Syntax error at line - %d\n\tERROR at %s - ",yylineno, yytext);
+  	printf(ANSI_COLOR_RED "Syntax error at line - %d" ANSI_COLOR_RESET, yylineno);
+  	printf(ANSI_COLOR_RED"\n\tERROR at %s - "ANSI_COLOR_RESET, yytext);
 }
 
 void update_datatype(char* DType, int lno)
@@ -448,27 +485,38 @@ void update_datatype(char* DType, int lno)
 	line_number = lno;	
 }
 
-void lookup(char *token,int line,char type,char *value,char *datatype_remove)
+void add_parameters(char *token, void *param)
 {
-	if(search_in_scope(token, line) != -1) printf("ERROR at line %d: \'%s\' is being re-declared\n\n", line, token);
+}
+
+int lookup(char *token, int line, char type, char *value)
+{
+	if(search_in_scope(token) != -1)
+	{
+		printf(ANSI_COLOR_RED "ERROR at line %d: \'%s\' is being re-declared\n\n" ANSI_COLOR_RESET, line, token);
+		return 0;
+	}
+	
 	else
 	{
-		strcpy(st[struct_index].name,token);
-		st[struct_index].type=type;
-		if(value==NULL)
+		strcpy(st[struct_index].name, token);
+		st[struct_index].type = type;
+		
+		if(value == NULL)
 			st[struct_index].value=NULL;
 		else
-			strcpy(st[struct_index].value,value);
+			strcpy(st[struct_index].value, value);
 			
 		strcpy(st[struct_index].datatype, datatype);
 		st[struct_index].scope = scope_val;
 			
 		st[struct_index].line = line;
-		struct_index++;  
+		struct_index++; 
+		return 1; 
 	}
 }
 
-int search_in_scope(char *token,int lineno)
+int search_in_scope(char *token)
 {
 	for(int i = 0;i < struct_index;i++)
 	{
@@ -495,43 +543,28 @@ int search_id(char *token,int lineno)
 void search_func(char* token, int lineno)
 {
 	int index = search_id(token, lineno);
-	if(index == -1) printf("ERROR at line %d: Function - \'%s\' not declared\n\n", lineno, token);
-}
-
-void update(char *token,int lineno,char *value)
-{
-	int flag = 0;
-
-	int index = search_id(token, lineno);
-	if(index == -1) printf("ERROR at line %d: \'%s\' is not declared\n\n", lineno, token);
-	else
-	{
-	  st[index].value = (char*)malloc(sizeof(char)*strlen(value));
-	  strcpy(st[index].value,value);
-	  st[index].line = lineno;
-	  return;
-	}
+	if(index == -1) printf(ANSI_COLOR_RED "ERROR at line %d: Function - \'%s\' is not declared\n\n" ANSI_COLOR_RESET, lineno, token);
 }
 
 void increment_scope()
 {	
 	scope_val = next_scope;
-	push(scope_val);
+	push_scope(scope_val);
 	++next_scope;
 }
 
 void decrement_scope()
 {
-	pop();
+	pop_scope();
 	scope_val = stack[top-1];
 }
 
-void push(int scope)
+void push_scope(int scope)
 {
 	stack[top++]=scope;
 }
  
-void pop()
+void pop_scope()
 {
 	--top;
 }
@@ -546,47 +579,63 @@ int search_scope(int value)
 }
 
 
-void push_i()
+void push_stack(char* token)
 {
-	//printf("-----%s---a\n",yytext);
-	strcpy(sti[++top_i],yytext);
-	
+	//printf("\t\tPushing - %s\n",token);
+	strcpy(sti[++top_i],token);	
 }
 
+void pop_stack()
+{
+    --top_i;
+}
 
 void codegen()
 {
-    strcpy(temp,"T");
-    sprintf(tmp_i, "%d", temp_i);
-    strcat(temp,tmp_i);
+	/* Temporary variable */
+    char temp[2] = "T";
+    char tmp_no[4];
+    sprintf(tmp_no, "%d", temp_i);
+    strcat(temp, tmp_no);
+	temp_i++;
+	
+	/* Generating ICG for the expression */
     printf("%s = %s %s %s\n",temp,sti[top_i-2],sti[top_i-1],sti[top_i]);
+    
+	/* Quadraple form of the expression */
     q[quadlen].op = (char*)malloc(sizeof(char)*strlen(sti[top_i-1]));
     q[quadlen].arg1 = (char*)malloc(sizeof(char)*strlen(sti[top_i-2]));
     q[quadlen].arg2 = (char*)malloc(sizeof(char)*strlen(sti[top_i]));
     q[quadlen].res = (char*)malloc(sizeof(char)*strlen(temp));
+    
     strcpy(q[quadlen].op,sti[top_i-1]);
     strcpy(q[quadlen].arg1,sti[top_i-2]);
     strcpy(q[quadlen].arg2,sti[top_i]);
     strcpy(q[quadlen].res,temp);
     quadlen++;
+    
+	/* Update the stack */
     top_i-=2;
     strcpy(sti[top_i],temp);
-
-temp_i++;
 }
 
 void codegen_assign()
 {
-    //printf("%s,%s,%s\n",sti[top_i-2],sti[top_i-1],sti[top_i]);
-    printf("%s = %s\n",sti[top_i-3],sti[top_i]);
+	/* Generating ICG for the expression */
+    printf("%s = %s\n", sti[top_i-2],sti[top_i]);
+    
+	/* Quadraple form of the expression */
     q[quadlen].op = (char*)malloc(sizeof(char));
     q[quadlen].arg1 = (char*)malloc(sizeof(char)*strlen(sti[top_i]));
     q[quadlen].arg2 = NULL;
-    q[quadlen].res = (char*)malloc(sizeof(char)*strlen(sti[top_i-3]));
+    q[quadlen].res = (char*)malloc(sizeof(char)*strlen(sti[top_i-2]));
+    
     strcpy(q[quadlen].op,"=");
     strcpy(q[quadlen].arg1,sti[top_i]);
-    strcpy(q[quadlen].res,sti[top_i-3]);
+    strcpy(q[quadlen].res,sti[top_i-2]);
     quadlen++;
+    
+	/* Update the stack */
     top_i-=2;
 }
 

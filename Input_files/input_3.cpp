@@ -12,7 +12,7 @@ int main()
 	int a;
 	char b;
 	b = 10;
-	a = 12;
+	a = 12*10;
 	b = 9;
 	func();
 	float d;

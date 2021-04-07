@@ -27,14 +27,13 @@ using namespace std;
 class ght{
 };
 
-int1 main() {
+int main() {
         cout << endl << endl;
-        int 1a, b, c;
+        int a, b;
         int g;
         int c=10;
         int d;
         int y;
-        static int x=10;
      //   static int a;
        // const int a=10;
         //const int a,b,z;
