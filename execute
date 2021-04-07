@@ -1,9 +1,22 @@
 rm -f a.out
 rm -f tokens.txt
 rm -f symbol.txt
+rm -f quadrple.txt
+rm -f final_symbol.txt
 
-yacc -d icg.y
+yacc -d parser.y
 lex lexer.l
 gcc y.tab.c lex.yy.c -ll
 
-./a.out Input_files/input_7.cpp
+./a.out Input_files/input_7.cpp >icg.txt
+
+python optimizer.py 'icg.txt' >all_optmin.txt
+
+yacc -d optmin.y
+lex optmin.l
+gcc y.tab.c lex.yy.c -ll
+./a.out >value.txt
+
+python compare.py
+
+
