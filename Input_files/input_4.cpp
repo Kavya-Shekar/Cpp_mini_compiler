@@ -15,9 +15,9 @@ class A
 int main()
 {
         cout << endl << endl;
-        int a, b;
+        int a;
         int g;
-        int c=10;
+        int c = 7;
         int d;
         int y;
 	int b = 1*9/7/6%3; 

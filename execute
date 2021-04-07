@@ -6,4 +6,4 @@ yacc -d icg.y
 lex lexer.l
 gcc y.tab.c lex.yy.c -ll
 
-./a.out Input_files/input_4.cpp
+./a.out Input_files/input_7.cpp

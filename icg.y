@@ -41,6 +41,18 @@
 	int search_scope(int value);
 	int search_in_scope(char *token);
 	
+	void update_quadraple(char* op, char* arg1, char* arg2, char* res);
+	
+	void push_do_label();
+	void check_do_loop();
+	
+	char* push_if_label();
+	void check_if_loop();
+	void check_ifelse_loop();
+	void print_label(int step);
+	void insert_goto_label(int step);
+	void remove_labels(int step);
+	
 	void add_parameters(char *token, void *param);
 	int top_i =-1;
 	
@@ -83,7 +95,7 @@
 
 %%
 S	
-	: HEADER {printf("Input Accepted.\n");}
+	: HEADER /*{printf("Input Accepted.\n");} */
 	;
 
 
@@ -237,11 +249,11 @@ C
 	;
 
 LOOP
-	: T_if '(' COND ')' '{' C '}'  IF_L
-	| T_do '{' C '}' T_while '(' COND ')' ';'
+	: T_if '(' COND  { check_if_loop(); } ')' '{' C '}' { insert_goto_label(0); } IF_L
+	| T_do { push_do_label(); } '{' C '}' T_while '(' COND { check_do_loop(); }')' ';'
 	;
 UX
-	: T_identifier UO 
+	: T_identifier UO
 	| UO T_identifier
 	;
 
@@ -251,9 +263,9 @@ UO
 	;
 
 IF_L
-	: T_elseif '(' COND ')' '{' C'}'  IF_L
-	| T_else '{' C'}' IF_L
-	| /* lambda */
+	: T_elseif {  print_label(-1); } '(' COND ')' { check_ifelse_loop(); } '{' C '}' { insert_goto_label(0); } IF_L
+	| T_else { print_label(-1); } '{' C '}' { print_label(0); remove_labels(-1); }
+	| /* lambda */ { print_label(-1); print_label(0); remove_labels(-1); }
 	;
 
 COND
@@ -261,24 +273,23 @@ COND
       |'(' COND ')'COND
       | NEG COND
       | LOGIC_OP COND
-      | /* lambda */
+      | LIT
       ;
       
 RELOP
-      : '>'
-      | '<' 
-      | T_lt_eq 
-      | T_gt_eq 
-      | T_equal 
-      | T_not_equal
-      | /* lambda */
+      : '>'  { push_stack(">"); }
+      | '<'   { push_stack("<"); }
+      | T_lt_eq   { push_stack("<="); }
+      | T_gt_eq   { push_stack(">="); }
+      | T_equal   { push_stack("=="); }
+      | T_not_equal  { push_stack("!="); }
       ;
 
 LOGIC_OP
-      : T_and 
-      | T_or
-      | '|'
-      | '&'
+      : T_and  { push_stack("&&"); }
+      | T_or  { push_stack("||"); }
+      | '|'  { push_stack("|"); }
+      | '&'  { push_stack("&"); }
       ;
 
 NEG
@@ -408,9 +419,16 @@ T_PRINT
 %%
 #include<ctype.h>
 char datatype[20];
-int line_number = 0;
 char sti[100][100];
 int temp_i = 0;
+
+int do_label = 0;
+char *do_lb[100];
+int dl = 0;
+
+int if_label = 0;
+char *if_lb[100];
+int il = 0;
 
 int main(int argc,char *argv[])
 {
@@ -424,7 +442,7 @@ int main(int argc,char *argv[])
 	yyin = input_fp;
 	if(!yyparse())  //yyparse-> 0 if success
 	{
-		printf("Parsing Complete\n");
+		//printf("Parsing Complete\n");
 		FILE *fptr;
 		fptr = fopen("symbol.txt", "a");
 		if(fptr == NULL)
@@ -482,11 +500,24 @@ void yyerror(char *s)
 void update_datatype(char* DType, int lno)
 {
 	strcpy(datatype, DType);
-	line_number = lno;	
 }
 
 void add_parameters(char *token, void *param)
 {
+}
+
+void add_temp_variables(char* token, int line)
+{	
+	strcpy(st[struct_index].name, token);
+	st[struct_index].type = 'I';
+	st[struct_index].value=NULL;
+		
+	strcpy(st[struct_index].datatype, datatype);
+	st[struct_index].scope = scope_val;
+		
+	st[struct_index].line = line;
+	struct_index++; 
+	
 }
 
 int lookup(char *token, int line, char type, char *value)
@@ -534,10 +565,10 @@ int search_id(char *token,int lineno)
 	{
 		if(!strcmp(st[i].name,token) && search_scope(st[i].scope))
 		{
-			return i;
+			return 1;
 		}
 	}
-	return -1;
+	return 0;
 }
 
 void search_func(char* token, int lineno)
@@ -578,6 +609,35 @@ int search_scope(int value)
 	return 0;
 }
 
+void update_quadraple(char* op, char* arg1, char* arg2, char* res)
+{
+	q[quadlen].op = q[quadlen].arg1 = q[quadlen].arg2 = q[quadlen].res = NULL;
+	
+    if(op)
+    {
+    	q[quadlen].op = (char*)malloc(sizeof(char)*strlen(op));
+    	strcpy(q[quadlen].op, op);
+    }
+    
+    if(arg1)
+    {
+    	q[quadlen].arg1 = (char*)malloc(sizeof(char)*strlen(arg1));
+    	strcpy(q[quadlen].arg1, arg1);
+    }
+    
+    if(arg2)
+    {
+    	q[quadlen].arg2 = (char*)malloc(sizeof(char)*strlen(arg2));
+    	strcpy(q[quadlen].arg2, arg2);
+    }
+    
+    if(res)
+    {
+    	q[quadlen].res = (char*)malloc(sizeof(char)*strlen(res));
+    	strcpy(q[quadlen].res, res);
+    }
+    quadlen++;
+}
 
 void push_stack(char* token)
 {
@@ -598,22 +658,14 @@ void codegen()
     sprintf(tmp_no, "%d", temp_i);
     strcat(temp, tmp_no);
 	temp_i++;
+	add_temp_variables(temp, yylineno);
 	
 	/* Generating ICG for the expression */
     printf("%s = %s %s %s\n",temp,sti[top_i-2],sti[top_i-1],sti[top_i]);
     
 	/* Quadraple form of the expression */
-    q[quadlen].op = (char*)malloc(sizeof(char)*strlen(sti[top_i-1]));
-    q[quadlen].arg1 = (char*)malloc(sizeof(char)*strlen(sti[top_i-2]));
-    q[quadlen].arg2 = (char*)malloc(sizeof(char)*strlen(sti[top_i]));
-    q[quadlen].res = (char*)malloc(sizeof(char)*strlen(temp));
-    
-    strcpy(q[quadlen].op,sti[top_i-1]);
-    strcpy(q[quadlen].arg1,sti[top_i-2]);
-    strcpy(q[quadlen].arg2,sti[top_i]);
-    strcpy(q[quadlen].res,temp);
-    quadlen++;
-    
+	update_quadraple(sti[top_i-1], sti[top_i-2], sti[top_i], temp);
+	
 	/* Update the stack */
     top_i-=2;
     strcpy(sti[top_i],temp);
@@ -625,18 +677,127 @@ void codegen_assign()
     printf("%s = %s\n", sti[top_i-2],sti[top_i]);
     
 	/* Quadraple form of the expression */
-    q[quadlen].op = (char*)malloc(sizeof(char));
-    q[quadlen].arg1 = (char*)malloc(sizeof(char)*strlen(sti[top_i]));
-    q[quadlen].arg2 = NULL;
-    q[quadlen].res = (char*)malloc(sizeof(char)*strlen(sti[top_i-2]));
-    
-    strcpy(q[quadlen].op,"=");
-    strcpy(q[quadlen].arg1,sti[top_i]);
-    strcpy(q[quadlen].res,sti[top_i-2]);
-    quadlen++;
+	update_quadraple("=", sti[top_i], NULL,sti[top_i-2]);
     
 	/* Update the stack */
     top_i-=2;
 }
+
+void push_do_label()
+{
+	/* Pushing new label to label stack*/
+    char label[2] = "L";
+    char label_no[4];
+    sprintf(label_no, "%d", do_label);
+    strcat(label, label_no);
+	do_lb[++dl] = (char*)malloc(sizeof(char)*strlen(label));
+	strcpy(do_lb[dl], label);
+	do_label++;
+	
+	/* Generating ICG for the expression */
+	printf("%s:\n", label);
+    
+	/* Quadraple form of the expression */
+	update_quadraple(NULL,NULL, NULL, label);
+}
+
+void check_do_loop()
+{
+	/* Generating temperary variables for condition */	
+	codegen();
+	
+	/* Generating ICG for the expression */
+    printf("if %s goto %s\n", sti[top_i],do_lb[dl]);
+    
+	/* Quadraple form of the expression */
+	update_quadraple("if", sti[top_i], NULL, do_lb[dl]);	
+}
+
+char* push_if_label()
+{
+	/* Pushing new label to label stack*/
+    char label[2] = "L";
+    char label_no[4];
+    sprintf(label_no, "%d", if_label);
+    strcat(label, label_no);
+	if_lb[++il] = (char*)malloc(sizeof(char)*strlen(label));
+	strcpy(if_lb[il], label);
+	if_label++;
+	
+	return if_lb[il];	
+}
+
+void check_if_loop()
+{
+	/* Generating temperary variables for condition */	
+	codegen();
+	
+	char* true_label = push_if_label();
+	--il;
+	char* false_label = push_if_label();
+	char* fall_through = push_if_label();
+	/* Generating ICG for the expression */
+    printf("if %s goto %s\n", sti[top_i], true_label);
+	update_quadraple("if", sti[top_i], NULL, true_label);
+    
+	/* Generating ICG for the else expression */
+    printf("ifFalse %s goto %s\n", sti[top_i], false_label);
+	update_quadraple("ifFalse", sti[top_i], NULL, false_label);
+	
+	printf("%s :\n", true_label);
+	update_quadraple(true_label, NULL, NULL, NULL);	
+}
+
+void print_label(int step)
+{
+	char* label = if_lb[il + step];
+	printf("%s :\n", label);
+	update_quadraple(NULL, NULL, NULL, label);
+}
+
+void remove_labels(int step)
+{
+	il = il+step - 1;
+}
+
+void insert_goto_label(int step)
+{
+	char* label = if_lb[il - step];
+	printf("goto %s\n", label);
+	update_quadraple("goto", NULL, NULL, label);	
+}
+
+void check_ifelse_loop()
+{	
+	char* fall_through = if_lb[il];
+	il -= 2;
+	
+	char* true_label = push_if_label();
+	--il;
+	
+	char* new_false_label = push_if_label();
+	strcpy(if_lb[++il], fall_through);	
+	fall_through = if_lb[il];
+	
+	/* Generating ICG for the expression
+	printf("%s :\n", false_label);
+	update_quadraple(NULL, NULL, NULL, false_label); */
+	
+	/* Generating temperary variables for condition */	
+	codegen();
+	
+    printf("if %s goto %s\n", sti[top_i], true_label);
+	update_quadraple("if", sti[top_i], NULL, true_label);
+    
+	/* Generating ICG for the else expression */
+    printf("ifFalse %s goto %s\n", sti[top_i], new_false_label);
+	update_quadraple("ifFalse", sti[top_i], NULL, new_false_label);
+	
+	printf("%s :\n", true_label);
+	update_quadraple(true_label, NULL, NULL, NULL);	
+}
+
+
+
 
 
