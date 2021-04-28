@@ -26,6 +26,7 @@
 "]"					{yylval = strdup(yytext);return(']'); }
 "goto"				{yylval = strdup(yytext);return T_GOTO;}
 "if"				{yylval = strdup(yytext);return T_IF;}
+"ifFalse"				{yylval = strdup(yytext);return T_IFF;}
 [0-9]+|[0-9]+.[0-9]+		{yylval = strdup(yytext);return T_NUMBER;}
 [a-zA-Z_][a-zA-Z_0-9]*				{yylval = strdup(yytext);return T_ID;}
 [  \t\v\f]+				{}
