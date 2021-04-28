@@ -53,6 +53,9 @@
 	void insert_goto_label(int step);
 	void remove_labels(int step);
 	
+	void reset_error();
+	void set_error();
+	
 	void add_parameters(char *token, void *param);
 	int top_i =-1;
 	
@@ -325,39 +328,19 @@ DECLR
 LISTVAR
 	: T_identifier { lookup($1,yylineno,'I',NULL); }
 	| T_identifier ',' LISTVAR { lookup($1,yylineno,'I',NULL); }
-	| T_identifier '=' { push_stack($1);  push_stack(yytext); } EXP 
-			{ 	
-				if(lookup($1,yylineno,'I',NULL))
-				{ 
-					codegen_assign();
-				} 
-				else
-				{
-					pop_stack();
-				}
-			} LISTVAR
+	| T_identifier '=' { if(!lookup($1,yylineno,'I',NULL)){set_error();} push_stack($1);  push_stack(yytext); } EXP { codegen_assign(); reset_error();} LISTVAR
 	| /* lambda */
 	;
 
 ASSIGN
-	: T_identifier { push_stack($1); } '=' { push_stack(yytext);} EXP 
-			{ 
-				if(search_id($1,yylineno)) 
-				{
-					codegen_assign(); 
-				}
-				else
-				{
-					pop_stack();
-				}
-			}
+	: T_identifier { search_id($1,yylineno); push_stack($1); } '=' { push_stack(yytext);} EXP { codegen_assign(); reset_error();}
 	;
 
 STATEMENTS
 	: T_return EXP
 	| UX
 	| PRINT 
-	| T_identifier Function_call { search_func($1,yylineno); }
+	| T_identifier Function_call {reset_error(); search_func($1,yylineno); reset_error(); }
 	| /* lambda */
 	;	
 
@@ -422,9 +405,15 @@ char datatype[20];
 char sti[100][100];
 int temp_i = 0;
 
-int label_count = 0;
-char *labels[100];
-int lb = 0;
+int do_label = 0;
+char *do_lb[100];
+int dl = 0;
+
+int if_label = 0;
+char *if_lb[100];
+int il = 1;
+
+int erred = 0;
 
 int main(int argc,char *argv[])
 {
@@ -441,8 +430,6 @@ int main(int argc,char *argv[])
 		//printf("Parsing Complete\n");
 		FILE *fptr;
 		fptr = fopen("symbol.txt", "a");
-		FILE *qptr;
-		qptr = fopen("quadrple.txt", "a");
 		if(fptr == NULL)
 		{
 			  printf("Error!");
@@ -471,15 +458,14 @@ int main(int argc,char *argv[])
 							i+1, st[i].name, st[i].line, ty, st[i].datatype, (char*)st[i].value, st[i].scope);
 			}
 			
-			fprintf(qptr,"\n\n---------------------Quadruples-------------------------\n\n");
-			fprintf(qptr,"Operator \t Arg1 \t\t Arg2 \t\t Result \n");
+			fprintf(fptr,"\n\n---------------------Quadruples-------------------------\n\n");
+			fprintf(fptr,"Operator \t Arg1 \t\t Arg2 \t\t Result \n");
 			for(int i = 0; i<quadlen; i++)
 			{
-				fprintf(qptr,"%-8s \t %-8s \t %-8s \t %-6s \n", q[i].op, q[i].arg1, q[i].arg2, q[i].res);
+				fprintf(fptr,"%-8s \t %-8s \t %-8s \t %-6s \n", q[i].op, q[i].arg1, q[i].arg2, q[i].res);
 			}
 		}
 		fclose(fptr);
-		fclose(qptr);
 	}
 	else
 	{
@@ -505,6 +491,15 @@ void add_parameters(char *token, void *param)
 {
 }
 
+void reset_error()
+{
+	erred = 0;
+}
+void set_error()
+{
+	erred = 1;
+}
+
 void add_temp_variables(char* token, int line)
 {	
 	strcpy(st[struct_index].name, token);
@@ -515,8 +510,7 @@ void add_temp_variables(char* token, int line)
 	st[struct_index].scope = scope_val;
 		
 	st[struct_index].line = line;
-	struct_index++; 
-	
+	struct_index++; 	
 }
 
 int lookup(char *token, int line, char type, char *value)
@@ -567,13 +561,19 @@ int search_id(char *token,int lineno)
 			return 1;
 		}
 	}
+	printf(ANSI_COLOR_RED "ERROR at line %d: Variable - \'%s\' is not declared\n\n" ANSI_COLOR_RESET, lineno, token);
+	erred = 1;
 	return 0;
 }
 
 void search_func(char* token, int lineno)
 {
 	int index = search_id(token, lineno);
-	if(index == -1) printf(ANSI_COLOR_RED "ERROR at line %d: Function - \'%s\' is not declared\n\n" ANSI_COLOR_RESET, lineno, token);
+	if(index == -1)
+	{
+		printf(ANSI_COLOR_RED "ERROR at line %d: Function - \'%s\' is not declared\n\n" ANSI_COLOR_RESET, lineno, token);
+		erred = 1;
+	}
 }
 
 void increment_scope()
@@ -640,17 +640,21 @@ void update_quadraple(char* op, char* arg1, char* arg2, char* res)
 
 void push_stack(char* token)
 {
+	if(erred) return;
 	//printf("\t\tPushing - %s\n",token);
 	strcpy(sti[++top_i],token);	
 }
 
 void pop_stack()
 {
+	if(erred) return;
     --top_i;
 }
 
 void codegen()
 {
+	if(erred) return;
+	
 	/* Temporary variable */
     char temp[2] = "T";
     char tmp_no[4];
@@ -672,6 +676,8 @@ void codegen()
 
 void codegen_assign()
 {
+	if(erred) return;
+	
 	/* Generating ICG for the expression */
     printf("%s = %s\n", sti[top_i-2],sti[top_i]);
     
@@ -684,14 +690,15 @@ void codegen_assign()
 
 void push_do_label()
 {
+	if(erred) return;
 	/* Pushing new label to label stack*/
     char label[2] = "L";
     char label_no[4];
-    sprintf(label_no, "%d", label_count);
+    sprintf(label_no, "%d", if_label);
     strcat(label, label_no);
-	labels[++lb] = (char*)malloc(sizeof(char)*strlen(label));
-	strcpy(labels[lb], label);
-	label_count++;
+	if_lb[++il] = (char*)malloc(sizeof(char)*strlen(label));
+	strcpy(if_lb[il], label);
+	if_label++;
 	
 	/* Generating ICG for the expression */
 	printf("%s:\n", label);
@@ -702,47 +709,53 @@ void push_do_label()
 
 void check_do_loop()
 {
+	if(erred) return;
+	
 	/* Generating temperary variables for condition */	
 	codegen();
 	
 	/* Generating ICG for the expression */
-    printf("if %s goto %s\n", sti[top_i],labels[lb]);
+    printf("if %s goto %s\n", sti[top_i], if_lb[il]);
     
 	/* Quadraple form of the expression */
-	update_quadraple("if", sti[top_i], NULL, labels[lb]);	
-	--lb;
+	update_quadraple("if", sti[top_i], NULL, if_lb[il]);
+	--il;	
 }
 
 char* push_if_label()
 {
+	
 	/* Pushing new label to label stack*/
     char label[2] = "L";
     char label_no[4];
-    sprintf(label_no, "%d", label_count);
+    sprintf(label_no, "%d", if_label);
     strcat(label, label_no);
-	labels[++lb] = (char*)malloc(sizeof(char)*strlen(label));
-	strcpy(labels[lb], label);
-	label_count++;
+	if_lb[++il] = (char*)malloc(sizeof(char)*strlen(label));
+	strcpy(if_lb[il], label);
+	if_label++;
 	
-	return labels[lb];	
+	return if_lb[il];	
 }
 
 void check_if_loop()
 {
+	if(erred) return;
+	
 	/* Generating temperary variables for condition */	
 	codegen();
 	
 	char* true_label = push_if_label();
-	--lb;
+	--il;
 	char* false_label = push_if_label();
 	char* fall_through = push_if_label();
+	
 	/* Generating ICG for the expression */
     printf("if %s goto %s\n", sti[top_i], true_label);
 	update_quadraple("if", sti[top_i], NULL, true_label);
     
 	/* Generating ICG for the else expression */
-    printf("if %s goto %s\n", sti[top_i], false_label);
-	update_quadraple("if", sti[top_i], NULL, false_label);
+    printf("ifFalse %s goto %s\n", sti[top_i], false_label);
+	update_quadraple("ifFalse", sti[top_i], NULL, false_label);
 	
 	printf("%s :\n", true_label);
 	update_quadraple(true_label, NULL, NULL, NULL);	
@@ -750,49 +763,57 @@ void check_if_loop()
 
 void print_label(int step)
 {
-	char* label = labels[lb + step];
+	if(erred) return;
+	
+	char* label = if_lb[il + step];
 	printf("%s :\n", label);
 	update_quadraple(NULL, NULL, NULL, label);
 }
 
 void remove_labels(int step)
 {
-	lb = lb + step - 1;
+	if(erred) return;
+	
+	il = il+step - 1;
 }
 
 void insert_goto_label(int step)
 {
-	char* label = labels[lb - step];
+	if(erred) return;
+	
+	char* label = if_lb[il - step];
 	printf("goto %s\n", label);
 	update_quadraple("goto", NULL, NULL, label);	
 }
 
 void check_ifelse_loop()
 {	
-	char* fall_through = labels[lb];
-	lb -= 2;
+	if(erred) return;
+	
+	char* fall_through = if_lb[il];
+	il -= 2;
 	
 	char* true_label = push_if_label();
-	--lb;
+	--il;
 	
 	char* new_false_label = push_if_label();
-	strcpy(labels[++lb], fall_through);	
-	fall_through = labels[lb];
+	strcpy(if_lb[++il], fall_through);	
+	fall_through = if_lb[il];
 	
-	/* Generating ICG for the expression
-	printf("%s :\n", false_label);
-	update_quadraple(NULL, NULL, NULL, false_label); */
-	
-	/* Generating temperary variables for condition */	
 	codegen();
 	
     printf("if %s goto %s\n", sti[top_i], true_label);
 	update_quadraple("if", sti[top_i], NULL, true_label);
     
 	/* Generating ICG for the else expression */
-    printf("if %s goto %s\n", sti[top_i], new_false_label);
-	update_quadraple("if", sti[top_i], NULL, new_false_label);
+    printf("ifFalse %s goto %s\n", sti[top_i], new_false_label);
+	update_quadraple("ifFalse", sti[top_i], NULL, new_false_label);
 	
 	printf("%s :\n", true_label);
 	update_quadraple(true_label, NULL, NULL, NULL);	
 }
+
+
+
+
+
