@@ -23,8 +23,6 @@
 	char* doOperations(char*,char*,char*);
 %}
 
-
-
 %token  T_ID T_NUMBER T_GOTO T_IF T_LEQ T_GEQ T_MOD T_EQEQ T_NEQ T_OROR T_ANDAND T_EQ T_IFF
 
 
@@ -56,7 +54,7 @@ start
 										}
 	|T_GOTO T_ID {fprintf(out,"%s %s\n",$1,$2);}
 	|T_IF T_ID T_GOTO T_ID {fprintf(out,"%s %s %s %s\n",$1,$2,$3,$4);}
-	|T_IFF T_ID T_GOTO T_ID {fprintf(out,"%s %s %s %s\n",$1,$2,$3,$4):}
+	|T_IFF T_ID T_GOTO T_ID {fprintf(out,"%s %s %s %s\n",$1,$2,$3,$4);}
 	|T_ID':' {fprintf(out,"%s:\n",$1);}
 	|T_ID T_EQ T_ID '[' T_ID ']' {fprintf(out,"%s %s %s%s%s%s\n",$1,$2,$3,$4,$5,$6);}
 	|T_ID '[' T_ID ']' T_EQ T_ID {fprintf(out,"%s%s%s%s %s %s",$1,$2,$3,$4,$5,$6);}

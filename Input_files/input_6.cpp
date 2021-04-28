@@ -11,7 +11,7 @@ int main()
         int c = 7;
         int d;
         int y;
-	int b = 1*9/7/6%3; 
+	int b = 0*9/7/6%3; 
 	
 	cout << "j";
 	
@@ -43,8 +43,8 @@ int main()
 	}
 	
 	int yu = 90;
-	int m = 10*7/4+3-7;
-	int m2 = 10*7/4+3-7;
-	int m3 = 10*7/4+3-7;
+	int m = b+c;
+	int m2 = b+c;
+	int m3 = b+c;
 	cout << "Hey there\n";
 }

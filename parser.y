@@ -429,7 +429,11 @@ int main(int argc,char *argv[])
 	{
 		//printf("Parsing Complete\n");
 		FILE *fptr;
-		fptr = fopen("symbol.txt", "a");
+		fptr = fopen("symbol.txt", "w");
+		
+		FILE *qptr;
+		qptr = fopen("quadraple.txt", "w");
+		
 		if(fptr == NULL)
 		{
 			  printf("Error!");
@@ -458,14 +462,16 @@ int main(int argc,char *argv[])
 							i+1, st[i].name, st[i].line, ty, st[i].datatype, (char*)st[i].value, st[i].scope);
 			}
 			
-			fprintf(fptr,"\n\n---------------------Quadruples-------------------------\n\n");
-			fprintf(fptr,"Operator \t Arg1 \t\t Arg2 \t\t Result \n");
+			fprintf(qptr,"---------------------Quadruples-------------------------\n\n");
+			fprintf(qptr,"Operator \t Arg1 \t\t Arg2 \t\t Result \n");
 			for(int i = 0; i<quadlen; i++)
 			{
-				fprintf(fptr,"%-8s \t %-8s \t %-8s \t %-6s \n", q[i].op, q[i].arg1, q[i].arg2, q[i].res);
+				fprintf(qptr,"%-8s \t %-8s \t %-8s \t %-6s \n", q[i].op, q[i].arg1, q[i].arg2, q[i].res);
 			}
+			fprintf(qptr,"\n");
 		}
 		fclose(fptr);
+		fclose(qptr);
 	}
 	else
 	{
