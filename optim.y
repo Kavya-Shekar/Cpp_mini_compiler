@@ -25,7 +25,7 @@
 
 
 
-%token  T_ID T_NUMBER T_GOTO T_IF T_LEQ T_GEQ T_EQEQ T_NEQ T_OROR T_ANDAND T_EQ 
+%token  T_ID T_NUMBER T_GOTO T_IF T_LEQ T_GEQ T_MOD T_EQEQ T_NEQ T_OROR T_ANDAND T_EQ
 
 
 %%
@@ -68,9 +68,9 @@ OPER:
 	|'/'
 	|'<'
 	|'>'
-	|'%'
 	|T_LEQ
 	|T_GEQ
+	|T_MOD
 	|T_EQEQ
 	|T_NEQ
 	|T_OROR
@@ -108,6 +108,7 @@ void ModifySymTab(char* name,char* value)
 		top++;
 		strcpy(table[top].name,name);
 		strcpy(table[top].value,value);
+		printf("%s\t%s\n",table[top].name,table[top].value);
 		return;
 	}
 	for(int i = top;i>=0;i--)
@@ -115,6 +116,7 @@ void ModifySymTab(char* name,char* value)
 		if(strcmp(table[i].name,name)==0)
 		{
 			strcpy(table[i].value,value);
+			printf("%s\t%s\n",table[i].name,table[i].value);
 			return;
 		}
 	}
@@ -151,7 +153,7 @@ char* doOperations(char* opr,char* op1,char* op2)
 	if(strcmp(opr,"<")==0) {res = oper1 < oper2;}
 	if(strcmp(opr,">=")==0) {res = oper1 >= oper2;}
 	if(strcmp(opr,"<=")==0) {res = oper1 <= oper2;}
-	if(strcmp(opr,"%")==0) {res = oper1 % oper2;}
+	if(strcmp(opr,"mod")==0) {res = oper1 % oper2;}
 	if(strcmp(opr,"==")==0) {res = oper1 == oper2;}
 	if(strcmp(opr,"!=")==0) {res = oper1 != oper2;}
 	if(strcmp(opr,"&&")==0) {res = oper1 && oper2;}

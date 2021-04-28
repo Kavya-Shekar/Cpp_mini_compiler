@@ -8,7 +8,7 @@ yacc -d parser.y
 lex lexer.l
 gcc y.tab.c lex.yy.c -ll
 
-./a.out Input_files/input_7.cpp >icg.txt
+./a.out Input_files/input_6.cpp > icg.txt
 
 python3 optimizer.py 'icg.txt' > all_optmin.txt
 

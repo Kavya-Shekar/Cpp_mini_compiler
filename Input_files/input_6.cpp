@@ -44,5 +44,7 @@ int main()
 	
 	int yu = 90;
 	int m = 10*7/4+3-7;
+	int m2 = 10*7/4+3-7;
+	int m3 = 10*7/4+3-7;
 	cout << "Hey there\n";
 }
