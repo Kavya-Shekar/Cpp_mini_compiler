@@ -10,13 +10,13 @@ gcc y.tab.c lex.yy.c -ll
 
 ./a.out Input_files/input_7.cpp >icg.txt
 
-python optimizer.py 'icg.txt' >all_optmin.txt
+python3 optimizer.py 'icg.txt' > all_optmin.txt
 
-yacc -d optmin.y
-lex optmin.l
+yacc -d optim.y
+lex optim.l
 gcc y.tab.c lex.yy.c -ll
-./a.out >value.txt
+./a.out > value.txt
 
-python compare.py
+python3 compare.py
 
 

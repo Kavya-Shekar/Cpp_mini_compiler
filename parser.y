@@ -422,13 +422,9 @@ char datatype[20];
 char sti[100][100];
 int temp_i = 0;
 
-int do_label = 0;
-char *do_lb[100];
-int dl = 0;
-
-int if_label = 0;
-char *if_lb[100];
-int il = 0;
+int label_count = 0;
+char *labels[100];
+int lb = 0;
 
 int main(int argc,char *argv[])
 {
@@ -691,11 +687,11 @@ void push_do_label()
 	/* Pushing new label to label stack*/
     char label[2] = "L";
     char label_no[4];
-    sprintf(label_no, "%d", do_label);
+    sprintf(label_no, "%d", label_count);
     strcat(label, label_no);
-	do_lb[++dl] = (char*)malloc(sizeof(char)*strlen(label));
-	strcpy(do_lb[dl], label);
-	do_label++;
+	labels[++lb] = (char*)malloc(sizeof(char)*strlen(label));
+	strcpy(labels[lb], label);
+	label_count++;
 	
 	/* Generating ICG for the expression */
 	printf("%s:\n", label);
@@ -710,10 +706,11 @@ void check_do_loop()
 	codegen();
 	
 	/* Generating ICG for the expression */
-    printf("if %s goto %s\n", sti[top_i],do_lb[dl]);
+    printf("if %s goto %s\n", sti[top_i],labels[lb]);
     
 	/* Quadraple form of the expression */
-	update_quadraple("if", sti[top_i], NULL, do_lb[dl]);	
+	update_quadraple("if", sti[top_i], NULL, labels[lb]);	
+	--lb;
 }
 
 char* push_if_label()
@@ -721,13 +718,13 @@ char* push_if_label()
 	/* Pushing new label to label stack*/
     char label[2] = "L";
     char label_no[4];
-    sprintf(label_no, "%d", if_label);
+    sprintf(label_no, "%d", label_count);
     strcat(label, label_no);
-	if_lb[++il] = (char*)malloc(sizeof(char)*strlen(label));
-	strcpy(if_lb[il], label);
-	if_label++;
+	labels[++lb] = (char*)malloc(sizeof(char)*strlen(label));
+	strcpy(labels[lb], label);
+	label_count++;
 	
-	return if_lb[il];	
+	return labels[lb];	
 }
 
 void check_if_loop()
@@ -736,7 +733,7 @@ void check_if_loop()
 	codegen();
 	
 	char* true_label = push_if_label();
-	--il;
+	--lb;
 	char* false_label = push_if_label();
 	char* fall_through = push_if_label();
 	/* Generating ICG for the expression */
@@ -753,34 +750,34 @@ void check_if_loop()
 
 void print_label(int step)
 {
-	char* label = if_lb[il + step];
+	char* label = labels[lb + step];
 	printf("%s :\n", label);
 	update_quadraple(NULL, NULL, NULL, label);
 }
 
 void remove_labels(int step)
 {
-	il = il+step - 1;
+	lb = lb + step - 1;
 }
 
 void insert_goto_label(int step)
 {
-	char* label = if_lb[il - step];
+	char* label = labels[lb - step];
 	printf("goto %s\n", label);
 	update_quadraple("goto", NULL, NULL, label);	
 }
 
 void check_ifelse_loop()
 {	
-	char* fall_through = if_lb[il];
-	il -= 2;
+	char* fall_through = labels[lb];
+	lb -= 2;
 	
 	char* true_label = push_if_label();
-	--il;
+	--lb;
 	
 	char* new_false_label = push_if_label();
-	strcpy(if_lb[++il], fall_through);	
-	fall_through = if_lb[il];
+	strcpy(labels[++lb], fall_through);	
+	fall_through = labels[lb];
 	
 	/* Generating ICG for the expression
 	printf("%s :\n", false_label);

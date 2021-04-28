@@ -83,8 +83,7 @@ def DeadCodeElimination(lines):
             out = exists_rhs(lines,lhs,i+1)
             if(out!=-1):
               outflag=1
-            else:
-	      continue
+            else: continue
             if(outflag == 1):
                new_lines.append(lines[i])
         else:
